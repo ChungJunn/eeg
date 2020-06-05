@@ -8,3 +8,5 @@ log
 *.png
 lstm/*
 ae/*
+lstm
+ae
