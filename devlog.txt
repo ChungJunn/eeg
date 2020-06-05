@@ -1,0 +1,215 @@
+
+@0602-12:14 the plot is now transmitted to neptune
+
+succeeded to send plt to neptune in eeg_test.py. Next, need to integrate eeg_test.py to eeg_run.py script in order to include training log and resulting plot in one experiment in neptune project.
+
+** issue with plotting
+I have to use subplot. need to figure out how to use normal plot. Also, need to figure out how to change markers so that I can plot two curves and still see well.
+
+** issue with dataset -> resolved
+I have made the splitting code wrong: the split should be valid:test:train split of 3000:3000:39000 with each chunk in order. But it is train:valid:test split. So it should be changed.
+
+** issue with data_prepare.sh --> partially resolved
+need to make a shell script to split the datasets
+--> only set csv file paths, and neptune names as arguments. Need more generalization of the code. especially in terms of selecting features and splitting.
+
+** issue with neptune and pdb
+seems that pdb does not work when neptune is being used inside the code
+
+
+@ 0602-14:50 testing autoencoder
+
+** testing autoencoder
+the autoencoder latent dimension is larget than input dimension. So need to check
+1) ae's output is approximation or exact?
+2) how does parameter of ae looks like?
+
+it is approximate, and as the values move further from the training data range, the output value error becomes larger.
+
+** making more visible plots
+added some error to the plots. 
+
+** computing anomaly scores
+1) finish implementing ae pipeline
+- implement pipeline
+- anomaly score computation and plotting
+
+the score is computed using validation set errors. We assume error is normally distributed. So we find validation set error distribution. Then, for test set errors, any error that falls outside the distribution is considered as anomaly.
+
+The result is ambiuous. the anomalous points do not fall outside of the distribution. In fact, it falls within the distribution, showing the similar probability to some values (peaks of waves) in the validation set.
+
+This complies with the fact that autoencoder shows similar error to the anomalous values. Therefore, we need to train the autoencoder so that it shows larger error values to the anomalous points.
+
+Specifically, it should give larger error for value 4.25 than 5.75.
+
+** play around with autoencoder settings to make some difference
+need to make size of layers to be adjustable by shell script. 
+
+@ 0603-08:33 implmenting pipeline
+connect the pipeline. We want neptune experiment to record training logs as well as test logs. We want eeg_run.py to set up a neptune object and pass them through both train and test functions.
+
+The pipeline is implemented. However, I am not sure how I can tune the model. Some possible isseus include:
+
+1) code bug
+2) autoencoder hidden dimensions - {(1,1), (2,1), (4,1), (1,2), (2,2), (4,2), (1,4), (2,4), (4,4)}
+3) learning rate - {0.1, 0.04, 0.02, 0.01, 0.004, 0.002, 0.001, 0.0004, 0.0002, 0.0001, 0.00004, 0.00002, 0.00001}
+4) batch size - {16, 32, 64, 128}
+
+** some preliminary observations
+Our goal is to train AE so that it reconstructs points in training set. For data points not on training set, we want error to be large. In our code, validation set error should be low, but test set error should be large.
+
+Difference btw anomalous datapoints and normal datapoints is range of number:
+-anomalous: [4, 4.5]
+-normal: [4.5, 6]
+
+Fine-tuning Autoencoder reduced error for both validation set and test set. In other words, AE becomes good at reconstructing both anomalous and normal datapoints.
+
+
+@ 0603-13:31 fix the autoencoder code - applying scaling for testing part
+the input data need to be normalized both during training and testing. I did not apply standardization for neither training and testing.
+
+1. scaling training data
+I will apply code to compute stats and save into files.
+1) read the prof code (comment and pseudo code)
+
+1 define attrs
+2 open input_file, and compute n_samples, dim_input
+3 save as nparray
+4 create new stat file and save them
+5 if not train, then open the file and retrieve the stats
+
+2) adopt code in your dataiter
+0 load appropriate files: in_file and out_file [check]
+- split eeg_<tr/val/test>.csv
+- discard out_file for autoencoder
+
+1 define attrs [good]
+2 open input_file, and compute n_samples, dim_input [good]
+3 save as nparray [check]
+4 create new stat file and save them[check]
+5 if not train, then open the file and retrieve the stats [check]
+
+def __next__()
+6 remove all rnn related lines
+7 output the normalized data in batch (bsz, 1)
+8 check the results by checking np results and dataiter results
+- the values are good
+- the positions work as expected: 1000th iteration reaches up to 16*1000th sample
+
+2. adopting the code to the current training
+- change the name of the iterator
+- identify the interfaces (argument passing)
+    1) input params -> change some names to be the same as old ones, add just_epoch
+    2) change valid_model() to be based of end_of_data
+    3) implement end_of_data in the new dataiter
+    4) remove just_epoch - also in train_main()
+    5) remove rnn_len
+    6) add train=True
+    7) argparse arguments : args.stat_file
+
+- check if pipeline is working -> likely to give weird results for evaluation [pipeline is working]
+
+
+3. applying scaling and descaling for evaluation code
+    2) scale the data within test code before putting thru model
+    3) descale the data after going through model
+
+    **Some problem, there are some cases when autoencoder perfectly reproduces the input. In that case the scoring function does not work. because it is divided by 0, sigma equals 0.
+
+    **Some observations: if dimension is large, autoencoder perfectly reproduces the input number. The dimension must be reduced, in order to make approximate guess, for the anomalous points, the model does similarly bad as some more rare points in the training set (the peaks).
+
+
+@ 0603-21:54 implementing multi-variable autoencoder and testing
+outline of this task as follows:
+1) modify data_prepare script [checked]
+the output data csv files should contain 2 columns. 
+2) the dataiter code needs change checked
+3) see if training loop works checked
+4) testing code should be modified, big time.
+    1 dataloading, scaling, forwarding, descaling all seem to work
+    2 need multi-variate gaussian function for likelihood computation 
+
+@ 0603-13:14 implementing LSTM-based sequential autoencoder model
+outline of this task as follows
+1) data prepare code
+2) build dataloader for sequential autoencoder
+4) build LSTM-based sequential autoencoder
+4) build training code
+5) build testing code
+6) connect to neptune
+
+** data_prepare code
+I have to output 2 columns for each data points. But, since you only used 1 variable for autoencoder, I think you should use 1 variable for the LSTM first. Then add it for both LSTM and autoencoder --> let's do this now, so that we can obtain some reasonable behavior from autoencoder.
+
+** build dataloader for sequential autoencoder
+build dataiter which output (Tx, Bn, D) tensor for each iteration. the input file is csv file, which has 1 input dim for each row. prof's code has already implemented this. 
+
+For the __init__(), there is codelines that I don't understand. It is computing statistics. This part is for normalization of variables. I remembered my mistake for autoencoder. I did not normalize the inputs when testing the model. It should have had scaling and de-scaling process.
+
+For the __next__(), and prepare_data
+
+TODO:
+1) implement multi-variate gaussian for autoencoder
+2) work the pipeline and observe some results
+3) move onto LSTM dataloader
+
+@ 0604-08:43 multivariate gaussian likelihood
+edit gaussian function to include multivariate gaussian function. fit function will retrieve mu (2d) and covariance matrix. Then we can check the result by using
+todo:
+1) remove original
+2) change prototype
+3) add mu and sigma to the property
+fit function to compute accordingly
+4) add isFit
+5) check mu, cov 
+
+** running hyper-parameter fitting
+1) lr: {0.04, 0.02, 0.01, 0.004, 0.002, 0.001, 0.004, 0.002, 0.001}
+2) hidden dimension: {1, 2, 4, 8, 16, 32}
+3) batch_size: {16, 32, 64, 128}
+
+** keep watch on tags. experiment with hyper-parameters
+
+our initial hypothesis:
+autoencoder will generate similar values for trained points. training set and valid set are trained point
+
+It seems that autoencoder tends to optimize toward the region where the most samples are located.
+Therefore, closeness of examples are better than the scarce presence of samples? What if we give more representational capacity to the ae? wouldn't it learn about the scarce points as well?
+--> 
+
+How to make measures more clear? We are measuring
+1) valid_loss (best valid loss)
+2) error_difference between valid_loss and test_loss (we want this to be large)
+3) diagrams
+    1. plot
+    2. error plot - what does error plot measure?
+    3. likelihood plot (the scale is really large why?)
+
+Todo
+1) separate the plots into 3 different plots
+1 locate each plots
+2 for each plot, draw plot and then export then clear
+3 for each plot, add label of (title, feature column) feature A, feature B
+4 Let's make column list and iterate through them. 
+
+1 make column list
+2 initialize subplots
+3 for each columns: plot figure and put legend
+4 put the big tile
+5 clf
+
+They have 2 features, but I am not sure if I am allowed to use the first feature. There is no mention about the second feature in the dataset
+
+2) investigate into 2, 3
+
+Some encouraging result is the little outlier errors in this anomaly region. Hypothesis?
+1) some points in test set is actually never covered in the training set? 
+2) 
+
+**what's up with this scale?
+Since the variance of error is so small. why not take histogram of errors? The reason is because gaussianhas too small variance I think..
+
+**plot some likelihood function on val_err. See if the likelihood function comes out alright..!
+1 add plot to the test code
+2 obtain scores on val_err vectors
+3 plot the result 
