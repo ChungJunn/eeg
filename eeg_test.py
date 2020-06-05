@@ -10,19 +10,25 @@ from eeg_utils import MultivariateGaussianLikelihood
 
 def test_main(args, neptune):
     model = torch.load(args.model_out_file).to('cpu')
-    
+    in_n = 2 #TODO integrate with args   
+
     fp = open(args.stat_file, 'r')
     lines = fp.readlines()
     x_avg= torch.tensor([float(s) for s in lines[0].split(',')])
     x_std= torch.tensor([float(s) for s in lines[1].split(',')])
     fp.close()
-    
+
     # load test data
     test_data = np.loadtxt(args.test_path, delimiter=',')
     test_data = torch.tensor(test_data).type(torch.float32).detach()
     test_inp = (test_data - x_avg) / x_std
 
-    test_recon = model(test_inp)
+    if args.model == 'lstm':
+        test_inp = test_inp.view(-1,1,in_n)
+        test_recon = model(test_inp).view(-1,in_n)
+    elif args.model == 'ae':
+        test_recon = model(test_inp)
+    
     test_recon = (test_recon * x_std) + x_avg
     test_err = test_recon - test_data
     
@@ -30,7 +36,12 @@ def test_main(args, neptune):
     val_data = torch.tensor(val_data).type(torch.float32)
     val_inp = (val_data - x_avg) / x_std
 
-    val_recon = model(val_inp)
+    if args.model == 'lstm':
+        val_inp = val_inp.view(-1,1,in_n)
+        val_recon = model(val_inp).view(-1,in_n)
+    elif args.model == 'ae':
+        val_recon = model(val_inp)
+    
     val_recon = (val_recon * x_std) + x_avg
     val_err = val_recon - val_data
    
@@ -81,10 +92,11 @@ if __name__ == '__main__':
     neptune.append_tag('run2')
     
     parser = argparse.ArgumentParser()
-    parser.add_argument('--test_path', type=str, help='', default='./data/eeg_test.csv')
-    parser.add_argument('--val_path', type=str, help='', default='./data/eeg_val.csv')
-    parser.add_argument('--stat_file', type=str, help='', default='./data/eeg.stat')
-    parser.add_argument('--model_out_file', type=str, help='', default='./results/dim1.pth')
+    parser.add_argument('--test_path', type=str, help='', default='/home/chl/eeg/data/eeg_test.csv')
+    parser.add_argument('--val_path', type=str, help='', default='/home/chl/eeg/data/eeg_val.csv')
+    parser.add_argument('--stat_file', type=str, help='', default='/home/chl/eeg/data/eeg.stat')
+    parser.add_argument('--model_out_file', type=str, help='', default='/home/chl/eeg/lstm/RMSprop0.002.dim2.pth')
+    parser.add_argument('--model', type=str, help='', default='lstm')
     args = parser.parse_args()
 
     test_main(args, neptune)
