@@ -210,6 +210,27 @@ Some encouraging result is the little outlier errors in this anomaly region. Hyp
 Since the variance of error is so small. why not take histogram of errors? The reason is because gaussianhas too small variance I think..
 
 **plot some likelihood function on val_err. See if the likelihood function comes out alright..!
-1 add plot to the test code
-2 obtain scores on val_err vectors
-3 plot the result 
+1 obtain scores on val_err vectors
+2 add plot to the test code
+3 plot the result
+
+generate error plot for valid error, too. 
+
+Going toward obtaining working pipeline
+
+1) modify settings for training
+
+- m2m or m2o good
+- shuffling good
+- rnn_len (BPTT) good
+- dim_hiddens #TODO: currently not being used
+
+- lr
+- optimizer
+
+2) obtain model
+
+3) apply evaluation code
+ - there is some error in there. You need to fowarding using (Tx, 1, D)
+ - 
+

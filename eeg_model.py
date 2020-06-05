@@ -1,6 +1,15 @@
 import torch
 import torch.nn as nn
 
+class EEG_Chung(nn.Module):
+    def __init__(self, dim_input=2, dim_out=2):
+        super(EEG_Chung, self).__init__()
+        self.rnn = nn.LSTM(input_size=dim_input, hidden_size=dim_out)
+
+    def forward(self, input):
+        output, hidden = self.rnn(input)
+        return output
+
 class EEG_AE_MODEL(nn.Module):
     def __init__(self, dim_input=1, dim_layer=2, dim_z=3):
         super(EEG_AE_MODEL, self).__init__()
@@ -18,8 +27,7 @@ class EEG_AE_MODEL(nn.Module):
 
 if __name__ == '__main__':
     import numpy as np
-    x_data = torch.tensor(np.array([2.4, 3.6, 2.2, 1.8])).type(torch.float32)
-    
-    model = EEG_AE_MODEL(32, 1, 2, 3)
+    x_data = torch.tensor(np.array([2.4, 3.6])).type(torch.float32) 
+    model = EEG_Chung()
 
     import pdb;pdb.set_trace()
