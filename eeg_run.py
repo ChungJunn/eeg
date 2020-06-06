@@ -30,6 +30,14 @@ parser.add_argument('--shuffle', type=int, help='')
 parser.add_argument('--m2m', type=int, help='')
 parser.add_argument('--rnn_len', type=int, help='')
 parser.add_argument('--dim_hidden', type=int, help='')
+
+# smoothing parameters
+parser.add_argument('--use_smoothing', type=int, help='')
+parser.add_argument('--window_size', type=int, help='')
+
+parser.add_argument('--train', type=int, help='')
+parser.add_argument('--test', type=int, help='')
+
 args = parser.parse_args()
 
 if __name__ == '__main__':
@@ -44,7 +52,8 @@ if __name__ == '__main__':
         from ae.ae_main import train_main
     if args.model == 'lstm':
         from lstm.lstm_main import train_main
-
-    train_main(args, neptune)
-
-    test_main(args, neptune)
+    
+    if args.train==1:
+        train_main(args, neptune)
+    if args.test==1:
+        test_main(args, neptune)

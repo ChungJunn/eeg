@@ -47,9 +47,13 @@ def test_main(args, neptune):
     val_err = val_recon - val_data
 
     # convert to numpy and apply smoothing
-    wsz = 40 # window size
-    test_err = smooth(test_err.detach().numpy(), wsz)
-    val_err = smooth(val_err.detach().numpy(), wsz)
+    if args.use_smoothing == 1: 
+        wsz = args.window_size # window size
+        test_err = smooth(test_err.detach().numpy(), wsz)
+        val_err = smooth(val_err.detach().numpy(), wsz)
+    else:
+        test_err = test_err.detach().numpy()
+        val_err = val_err.detach().numpy()
 
     # 1. draw normal/reconstruct plot
     cols = ['sensor1', 'sensor2'] # features 
@@ -65,9 +69,13 @@ def test_main(args, neptune):
         neptune.log_image('plot', fig)
     
     # 2. draw error plot
-    pad = np.empty((wsz-1, in_n)); pad[:] = np.nan # padding
-    te = np.vstack([pad, test_err]) # test error
-    ve = np.vstack([pad, val_err]) # valid error
+    if args.use_smoothing == 1: 
+        pad = np.empty((wsz-1, in_n)); pad[:] = np.nan # padding
+        te = np.vstack([pad, test_err]) # test error
+        ve = np.vstack([pad, val_err]) # valid error
+    else:
+        te = test_err
+        ve = val_err
 
     for j, (err, str) in enumerate([(ve, 'Validation'), (te, 'Test')]):
         fig, axs = plt.subplots(len(cols),1, figsize=(32,16))
@@ -84,9 +92,12 @@ def test_main(args, neptune):
     ts = glf.gaussian(test_err) # test score
     vs = glf.gaussian(val_err) # val score
     
-    pad = np.empty((wsz-1, in_n)); pad[:] = np.nan # padding
-    ts = np.vstack([pad, ts]) # test error
-    vs = np.vstack([pad, vs]) # valid error
+    if args.use_smoothing == 1: 
+        pad = np.empty((wsz-1,)); pad[:] = np.nan # padding. score is scalar
+        print('pad shape', pad.shape)
+        print('test shape', ts.shape)
+        ts = np.concatenate([pad, ts]) # test error
+        vs = np.concatenate([pad, vs]) # valid error
 
     fig, axs = plt.subplots(len(cols), 1, figsize=(32,16))
     for i, (s, str) in enumerate([(ts, 'test'), (vs, 'validation')]):

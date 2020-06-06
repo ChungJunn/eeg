@@ -3,8 +3,8 @@ GPU=$1
 
 # neptune
 INIT='cjlee/sandbox'
-NAME='lstm'
-TAG='initial_trials'
+NAME='testing'
+TAG='smoothing'
 
 TR_PATH='data/eeg_tr.csv'
 VAL_PATH='./data/eeg_val.csv'
@@ -32,6 +32,13 @@ M2M=0
 RNN_LEN=8
 DIM_HIDDEN=4
 
+# smoothing
+USE_SMOOTHING=1
+WINDOW_SIZE=80
+
+TRAIN=0
+TEST=1
+
 #MODEL_OUT_FILE=$OUT_DIR'/optim.'$OPTIMIZER'.'$LR'.pth'
 MODEL_OUT_FILE=$OUT_DIR'/'$MODEL'/add_fc_layer.pth'
 
@@ -44,4 +51,6 @@ python3 eeg_run.py --tr_path=$TR_PATH --val_path=$VAL_PATH \
     --init=$INIT --name=$NAME --tag=$TAG \
     --model=$MODEL \
     --dim_input=$DIM_INPUT --dim_layer=$DIM_LAYER --dim_z=$DIM_Z \
-    --shuffle=$SHUFFLE --m2m=$M2M --rnn_len=$RNN_LEN --dim_hidden $DIM_HIDDEN
+    --shuffle=$SHUFFLE --m2m=$M2M --rnn_len=$RNN_LEN --dim_hidden $DIM_HIDDEN \
+    --use_smoothing=$USE_SMOOTHING --window_size=$WINDOW_SIZE \
+    --train=$TRAIN --test=$TEST
