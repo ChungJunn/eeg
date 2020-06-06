@@ -7,6 +7,7 @@ import neptune
 import argparse
 import sys
 from eeg_utils import MultivariateGaussianLikelihood
+from eeg_utils import smoothBySlidingWindow as smooth
 
 def test_main(args, neptune):
     model = torch.load(args.model_out_file).to('cpu')
@@ -45,6 +46,11 @@ def test_main(args, neptune):
     val_recon = (val_recon * x_std) + x_avg
     val_err = val_recon - val_data
 
+    # convert to numpy and apply smoothing
+    wsz = 40 # window size
+    test_err = smooth(test_err.detach().numpy(), wsz)
+    val_err = smooth(val_err.detach().numpy(), wsz)
+
     # 1. draw normal/reconstruct plot
     cols = ['sensor1', 'sensor2'] # features 
     ids_col = range(test_data.shape[0]) # for index
@@ -59,20 +65,28 @@ def test_main(args, neptune):
         neptune.log_image('plot', fig)
     
     # 2. draw error plot
-    for j, (err, str) in enumerate([(val_err, 'Validation'), (test_err, 'Test')]):
+    pad = np.empty((wsz-1, in_n)); pad[:] = np.nan # padding
+    te = np.vstack([pad, test_err]) # test error
+    ve = np.vstack([pad, val_err]) # valid error
+
+    for j, (err, str) in enumerate([(ve, 'Validation'), (te, 'Test')]):
         fig, axs = plt.subplots(len(cols),1, figsize=(32,16))
         for i, col in enumerate(cols):
-            axs[i].plot(ids_col, err.detach().numpy()[:,i], '-k', linewidth=1)
+            axs[i].plot(ids_col, err[:,i], '-k', linewidth=1)
             axs[i].set_title(col)
         fig.suptitle('Error of ' + str)
         neptune.log_image('plot', fig)
 
     # 3. draw likelihood plot
     glf = MultivariateGaussianLikelihood()
-    glf.fit(val_err.detach().numpy())
+    glf.fit(val_err)
     
-    ts = glf.gaussian(test_err.detach().numpy()) # test score
-    vs = glf.gaussian(val_err.detach().numpy()) # val score
+    ts = glf.gaussian(test_err) # test score
+    vs = glf.gaussian(val_err) # val score
+    
+    pad = np.empty((wsz-1, in_n)); pad[:] = np.nan # padding
+    ts = np.vstack([pad, ts]) # test error
+    vs = np.vstack([pad, vs]) # valid error
 
     fig, axs = plt.subplots(len(cols), 1, figsize=(32,16))
     for i, (s, str) in enumerate([(ts, 'test'), (vs, 'validation')]):
@@ -82,8 +96,8 @@ def test_main(args, neptune):
     neptune.log_image('plot', fig)
 
     # error difference measure
-    val_sum =  torch.sum(torch.abs(val_err))
-    test_sum = torch.sum(torch.abs(test_err))
+    val_sum =  np.sum(np.abs(val_err))
+    test_sum = np.sum(np.abs(test_err))
     neptune.set_property('error_difference', (test_sum - val_sum).item())
 
 if __name__ == '__main__':

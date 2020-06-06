@@ -41,18 +41,22 @@ def smoothBySlidingWindow(data, window_size):
     write IO info
     '''
     data_len = data.shape[0]
+    in_n = data.shape[1]
     wsz = window_size
     l = []
 
     for pi in range(wsz-1, data_len):
         data_range = range(pi-wsz+1, pi+1)
-        w = in_nums[data_range, :] # window
+        w = data[data_range, :] # window
 
         a = np.mean(w, axis=0)
         l.append(a)
 
-    pad = np.empty((wsz-1, in_n)); pad[:] = np.nan
-    res = np.vstack([pad] + l)
+    #pad = np.empty((wsz-1, in_n)); pad[:] = np.nan
+    #res = np.vstack([pad, l])
+    #adding nan padding causes error in fitting gaussian function 
+
+    res = np.vstack(l)
 
     return res
 
