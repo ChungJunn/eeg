@@ -2,12 +2,14 @@ import torch
 import torch.nn as nn
 
 class EEG_Chung(nn.Module):
-    def __init__(self, dim_input=2, dim_out=2):
+    def __init__(self, dim_input, dim_hidden, dim_out):
         super(EEG_Chung, self).__init__()
-        self.rnn = nn.LSTM(input_size=dim_input, hidden_size=dim_out)
+        self.rnn = nn.LSTM(input_size=dim_input, hidden_size=dim_hidden)
+        self.fc = nn.Linear(dim_hidden, dim_out)
 
     def forward(self, input):
         output, hidden = self.rnn(input)
+        output = self.fc(output)
         return output
 
 class EEG_AE_MODEL(nn.Module):

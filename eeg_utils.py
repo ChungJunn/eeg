@@ -36,6 +36,25 @@ class MultivariateGaussianLikelihood:
 
         return np.exp(-fac / 2) / N
 
+def smoothBySlidingWindow(data, window_size):
+    '''
+    write IO info
+    '''
+    data_len = data.shape[0]
+    wsz = window_size
+    l = []
+
+    for pi in range(wsz-1, data_len):
+        data_range = range(pi-wsz+1, pi+1)
+        w = in_nums[data_range, :] # window
+
+        a = np.mean(w, axis=0)
+        l.append(a)
+
+    pad = np.empty((wsz-1, in_n)); pad[:] = np.nan
+    res = np.vstack([pad] + l)
+
+    return res
 
 if __name__=='__main__':
     data = np.loadtxt('./data/eeg_tr.csv', delimiter=',')

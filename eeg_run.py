@@ -35,12 +35,10 @@ args = parser.parse_args()
 if __name__ == '__main__':
     params = vars(args)
     
-    '''
     import neptune
     neptune.init(args.init)
     neptune.create_experiment(name=args.name, params=params)
     neptune.append_tag(args.tag) 
-    '''    
 
     if args.model == 'ae':
         from ae.ae_main import train_main

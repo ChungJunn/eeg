@@ -10,7 +10,7 @@ from eeg_utils import MultivariateGaussianLikelihood
 
 def test_main(args, neptune):
     model = torch.load(args.model_out_file).to('cpu')
-    in_n = 2 #TODO integrate with args   
+    in_n = args.dim_input 
 
     fp = open(args.stat_file, 'r')
     lines = fp.readlines()
@@ -31,7 +31,7 @@ def test_main(args, neptune):
     
     test_recon = (test_recon * x_std) + x_avg
     test_err = test_recon - test_data
-    
+
     val_data = np.loadtxt(args.val_path, delimiter=',')
     val_data = torch.tensor(val_data).type(torch.float32)
     val_inp = (val_data - x_avg) / x_std
@@ -44,7 +44,7 @@ def test_main(args, neptune):
     
     val_recon = (val_recon * x_std) + x_avg
     val_err = val_recon - val_data
-   
+
     # 1. draw normal/reconstruct plot
     cols = ['sensor1', 'sensor2'] # features 
     ids_col = range(test_data.shape[0]) # for index
@@ -95,8 +95,9 @@ if __name__ == '__main__':
     parser.add_argument('--test_path', type=str, help='', default='/home/chl/eeg/data/eeg_test.csv')
     parser.add_argument('--val_path', type=str, help='', default='/home/chl/eeg/data/eeg_val.csv')
     parser.add_argument('--stat_file', type=str, help='', default='/home/chl/eeg/data/eeg.stat')
-    parser.add_argument('--model_out_file', type=str, help='', default='/home/chl/eeg/lstm/RMSprop0.002.dim2.pth')
+    parser.add_argument('--model_out_file', type=str, help='', default='/home/chl/eeg/lstm/add_fc_layer.pth')
     parser.add_argument('--model', type=str, help='', default='lstm')
+    parser.add_argument('--dim_input', type=int, help='', default=2)
     args = parser.parse_args()
 
     test_main(args, neptune)

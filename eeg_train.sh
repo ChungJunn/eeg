@@ -3,8 +3,8 @@ GPU=$1
 
 # neptune
 INIT='cjlee/sandbox'
-NAME='Autoencoder'
-TAG='hidden_dimensions'
+NAME='lstm'
+TAG='initial_trials'
 
 TR_PATH='data/eeg_tr.csv'
 VAL_PATH='./data/eeg_val.csv'
@@ -27,13 +27,13 @@ DIM_LAYER=32
 DIM_Z=2
 
 # LSTM params
-SHUFFLE=1
+SHUFFLE=0
 M2M=0
 RNN_LEN=8
 DIM_HIDDEN=4
 
 #MODEL_OUT_FILE=$OUT_DIR'/optim.'$OPTIMIZER'.'$LR'.pth'
-MODEL_OUT_FILE=$OUT_DIR'/'$MODEL'/'$OPTIMIZER$LR'.pth'
+MODEL_OUT_FILE=$OUT_DIR'/'$MODEL'/add_fc_layer.pth'
 
 export CUDA_VISIBLE_DEVICES=$GPU
 python3 eeg_run.py --tr_path=$TR_PATH --val_path=$VAL_PATH \
