@@ -10,7 +10,7 @@ from eeg_utils import MultivariateGaussianLikelihood
 from eeg_utils import smoothBySlidingWindow as smooth
 
 def test_main(args, neptune):
-    model = torch.load(args.model_out_file).to('cpu')
+    model = torch.load(args.out_dir + '/' + args.exp_id).to('cpu')
     in_n = args.dim_input 
 
     fp = open(args.stat_file, 'r')

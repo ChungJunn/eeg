@@ -8,15 +8,16 @@ parser.add_argument('--val_path', type=str, help='', default='')
 parser.add_argument('--test_path', type=str, help='', default='')
 parser.add_argument('--stat_file', type=str, help='', default='')
 
-parser.add_argument('--batch_size', type=int, help='', default=32)
-parser.add_argument('--lr', type=float, help='', default=0.001)
-parser.add_argument('--optimizer', type=str, help='', default='RMSprop')
-parser.add_argument('--max_epoch', type=int, help='', default=1000)
-parser.add_argument('--valid_every', type=int, help='', default=5)
-parser.add_argument('--patience', type=int, help='', default=5)
+parser.add_argument('--batch_size', type=int, help='')
+parser.add_argument('--lr', type=float, help='')
+parser.add_argument('--optimizer', type=str, help='')
+parser.add_argument('--max_epoch', type=int, help='')
+parser.add_argument('--valid_every', type=int, help='')
+parser.add_argument('--patience', type=int, help='')
 
-parser.add_argument('--model', type=str, help='{ae, lstm}', default='ae')
-parser.add_argument('--model_out_file', type=str, help='', default='./AE_model.pth')
+parser.add_argument('--model', type=str, help='{ae, lstm}', default='')
+parser.add_argument('--out_dir', type=str, help='', default='')
+parser.add_argument('--exp_id', type=str, help='models are saved in exp_id', default='')
 
 parser.add_argument('--dim_input', type=int, help='')
 parser.add_argument('--dim_layer', type=int, help='')
@@ -31,7 +32,7 @@ parser.add_argument('--m2m', type=int, help='')
 parser.add_argument('--rnn_len', type=int, help='')
 parser.add_argument('--dim_hidden', type=int, help='')
 
-# smoothing parameters
+# smoothing parameter
 parser.add_argument('--use_smoothing', type=int, help='')
 parser.add_argument('--window_size', type=int, help='')
 
@@ -45,7 +46,7 @@ if __name__ == '__main__':
     
     import neptune
     neptune.init(args.init)
-    neptune.create_experiment(name=args.name, params=params)
+    exp = neptune.create_experiment(name=args.name, params=params)
     neptune.append_tag(args.tag) 
 
     if args.model == 'ae':
@@ -54,6 +55,7 @@ if __name__ == '__main__':
         from lstm.lstm_main import train_main
     
     if args.train==1:
+        args.exp_id = exp._id
         train_main(args, neptune)
     if args.test==1:
         test_main(args, neptune)
