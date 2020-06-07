@@ -1,5 +1,6 @@
 data/*
 figs/*
+others/*
 *.swp
 *.pyc
 __pycache__/*

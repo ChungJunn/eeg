@@ -65,19 +65,20 @@ def test_main(args, neptune):
     #neptune.log_image('Scatter', fig)
     sys.exit(0)
     '''
+    from neptunecontrib.api import log_chart
 
     # 1. draw normal/reconstruct plot
     cols = ['sensor1', 'sensor2'] # features 
     ids_col = range(test_data.shape[0]) # for index
     
     for j, (data, recon, str) in enumerate([(val_data, val_recon, 'Validation'), (test_data, test_recon, 'Test')]):
-        fig, axs = plt.subplots(len(cols),1, figsize=(32,16))
+        fig, axs = plt.subplots(len(cols),1, figsize=(12,3))
         for i, col in enumerate(cols):
-            axs[i].plot(ids_col, data.numpy()[:,i], '-k', linewidth=2)
-            axs[i].plot(ids_col, recon.detach().numpy()[:,i], '.b', markersize=1)
-            axs[i].set_title(col)
+            axs[i].plot(ids_col, data.numpy()[:,i], '-c', linewidth=2, label='Raw Data')
+            axs[i].plot(ids_col, recon.detach().numpy()[:,i], '-b', linewidth=1, label='Reconstructed Data')
+            axs[i].legend()
         fig.suptitle('Time Series of ' + str)
-        neptune.log_image('plot', fig)
+        log_chart('Data-Reconstruction', fig)
     
     # 2. draw error plot
     if args.use_smoothing == 1: 
@@ -127,12 +128,12 @@ def test_main(args, neptune):
         ts = np.concatenate([pad, ts]) # test error
         vs = np.concatenate([pad, vs]) # valid error
 
-    fig, axs = plt.subplots(len(cols), 1, figsize=(32,16))
-    for i, (s, str) in enumerate([(ts, 'test'), (vs, 'validation')]):
-        axs[i].plot(ids_col, s, '-k', linewidth=1)
-        axs[i].set_title(str)
-    fig.suptitle('Likelihood Scores')
-    neptune.log_image('plot', fig)
+    fig, axs = plt.subplots(len(cols), 1, figsize=(12,3))
+    for i, (s, str) in enumerate([(vs, 'validation'),(ts, 'test')]):
+        axs[i].plot(ids_col, s, '-g', linewidth=1, label='Likelihood Score')
+        axs[i].legend()
+    fig.suptitle('Likelihood Scores(valid and test respectively)')
+    log_chart('Liklihood-scores', fig)
 
     # error difference measure
     val_sum =  np.sum(np.abs(val_err))

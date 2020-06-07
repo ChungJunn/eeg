@@ -22,7 +22,7 @@ MODEL='lstm' # ae or lstm
 # AE params
 DIM_INPUT=2
 DIM_LAYER=32
-DIM_Z=2
+DIM_Z=1
 
 # LSTM params
 SHUFFLE=1
@@ -36,13 +36,13 @@ WINDOW_SIZE=80
 SIGMA_SCALE=16 #TODO
 
 ##MUST CHANGE##
-NAME='scale-factor-for-Sigma'
-TAG='scale'$SIGMA_SCALE'-0'
-#TAG=''
+NAME='LSTM-redraw-graphics'
+#TAG='scale'$SIGMA_SCALE'-0'
+TAG='tag'
 
-TRAIN=1
+TRAIN=0
 TEST=1
-EXP_ID='SAN-278' # for reloading model for test
+EXP_ID='SAN-305' # for reloading model for test
 ###############
 
 #MODEL_OUT_FILE=$OUT_DIR'/optim.'$OPTIMIZER'.'$LR'.pth'
@@ -55,7 +55,7 @@ python3 eeg_run.py --tr_path=$TR_PATH --val_path=$VAL_PATH \
     --max_epoch=$MAX_EPOCH --valid_every=$VALID_EVERY \
     --out_dir=$OUT_DIR --patience=$PATIENCE \
     --init=$INIT --name=$NAME --tag=$TAG \
-    --model=$MODEL --exp_id=$EXP_ID\
+    --model=$MODEL --exp_id=$EXP_ID \
     --dim_input=$DIM_INPUT --dim_layer=$DIM_LAYER --dim_z=$DIM_Z \
     --shuffle=$SHUFFLE --m2m=$M2M --rnn_len=$RNN_LEN --dim_hidden $DIM_HIDDEN \
     --use_smoothing=$USE_SMOOTHING --window_size=$WINDOW_SIZE --sigma_scale=$SIGMA_SCALE\
