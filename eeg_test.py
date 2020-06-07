@@ -21,7 +21,8 @@ def test_main(args, neptune):
 
     # load test data
     test_data = np.loadtxt(args.test_path, delimiter=',')
-    test_data = torch.tensor(test_data).type(torch.float32).detach()
+    test_lbl = test_data[:,-1]
+    test_data = torch.tensor(test_data[:,:-1]).type(torch.float32).detach() # last column is labels
     test_inp = (test_data - x_avg) / x_std
 
     if args.model == 'lstm':
@@ -61,7 +62,7 @@ def test_main(args, neptune):
     plt.scatter(val_err[:,0], val_err[:,1], marker='o', color='b', label='Validation Error')
     plt.scatter(test_err[:,0], test_err[:,1], marker='o', color='r', label='Test Error')
     plt.title('Scatter Plot of Error Vectors')
-    neptune.log_image('Scatter', fig)
+    #neptune.log_image('Scatter', fig)
     sys.exit(0)
     '''
 
@@ -102,6 +103,23 @@ def test_main(args, neptune):
     ts = glf.gaussian(test_err) # test score
     vs = glf.gaussian(val_err) # val score
     
+    # retrieve threshold from vs
+    T = np.min(vs) # Threshold
+    
+    pred = (ts < T)
+    test_lbl = test_lbl[wsz-1:] # the first part should be gone
+
+    from sklearn.metrics import accuracy_score
+    from sklearn.metrics import precision_score, recall_score
+    
+    acc = accuracy_score(test_lbl, pred)
+    prec = precision_score(test_lbl, pred)
+    rec = recall_score(test_lbl, pred)
+    
+    neptune.set_property('acc', acc)
+    neptune.set_property('prec', prec)
+    neptune.set_property('rec', rec) 
+
     if args.use_smoothing == 1: 
         pad = np.empty((wsz-1,)); pad[:] = np.nan # padding. score is scalar
         print('pad shape', pad.shape)
@@ -129,9 +147,13 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser()
     parser.add_argument('--test_path', type=str, help='', default='/home/chl/eeg/data/eeg_test.csv')
     parser.add_argument('--val_path', type=str, help='', default='/home/chl/eeg/data/eeg_val.csv')
-    parser.add_argument('--stat_file', type=str, help='', default='/home/chl/eeg/data/eeg.stat')
-    parser.add_argument('--model_out_file', type=str, help='', default='/home/chl/eeg/lstm/add_fc_layer.pth')
+    parser.add_argument('--stat_file', type=str, help='', default='/home/chl/eeg/data/eeg.stat') 
+    parser.add_argument('--exp_id', type=str, help='', default='SAN-269')
+    parser.add_argument('--out_dir', type=str, help='', default='/home/chl/eeg/lstm')
     parser.add_argument('--model', type=str, help='', default='lstm')
+    parser.add_argument('--use_smoothing', type=int, help='', default=1)
+    parser.add_argument('--sigma_scale', type=float, help='', default=8.0)
+    parser.add_argument('--window_size', type=int, help='', default=80)
     parser.add_argument('--dim_input', type=int, help='', default=2)
     args = parser.parse_args()
 

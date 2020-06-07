@@ -22,6 +22,13 @@ if __name__ == '__main__':
     test_data = data[val_test_split:test_tr_split,1:].reshape(-1, data_len)
     tr_data = data[test_tr_split:,1:].reshape(-1, data_len)
 
+    # add labels for test data
+    anomaly_range = range(1240, 1461) # anomaly range is [4240, 4460]
+    lbl = np.zeros((test_data.shape[0], 1))
+    lbl[anomaly_range] = 1
+
+    test_data = np.hstack([test_data, lbl])
+
     np.savetxt(args.tr_out_path, tr_data, delimiter=',')
     np.savetxt(args.val_out_path, val_data, delimiter=',')
     np.savetxt(args.test_out_path, test_data, delimiter=',')
