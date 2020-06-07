@@ -54,6 +54,16 @@ def test_main(args, neptune):
     else:
         test_err = test_err.detach().numpy()
         val_err = val_err.detach().numpy()
+    
+    '''
+    # scatter plot
+    fig = plt.figure()
+    plt.scatter(val_err[:,0], val_err[:,1], marker='o', color='b', label='Validation Error')
+    plt.scatter(test_err[:,0], test_err[:,1], marker='o', color='r', label='Test Error')
+    plt.title('Scatter Plot of Error Vectors')
+    neptune.log_image('Scatter', fig)
+    sys.exit(0)
+    '''
 
     # 1. draw normal/reconstruct plot
     cols = ['sensor1', 'sensor2'] # features 
@@ -87,7 +97,7 @@ def test_main(args, neptune):
 
     # 3. draw likelihood plot
     glf = MultivariateGaussianLikelihood()
-    glf.fit(val_err)
+    glf.fit(val_err, args.sigma_scale)
     
     ts = glf.gaussian(test_err) # test score
     vs = glf.gaussian(val_err) # val score

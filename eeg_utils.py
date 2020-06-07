@@ -7,9 +7,9 @@ class MultivariateGaussianLikelihood:
         self.Sigma = None
         self.isFit = 0
 
-    def fit(self, data):
+    def fit(self, data, scale_constant):
         self.mu = np.mean(data, axis=0)
-        self.Sigma = np.cov(data.transpose())
+        self.Sigma = np.cov(data.transpose()) * scale_constant
         self.isFit=1
 
     def gaussian(self, pos):
@@ -61,11 +61,13 @@ def smoothBySlidingWindow(data, window_size):
     return res
 
 if __name__=='__main__':
-    data = np.loadtxt('./data/eeg_tr.csv', delimiter=',')
+    data = np.loadtxt('/home/chl/eeg/data/eeg_tr.csv', delimiter=',')
 
     glf = MultivariateGaussianLikelihood() # gaussian likelihood function
 
-    glf.fit(data)
+    scale_constant = 2
+
+    glf.fit(data, scale_constant)
 
     pos = data[:10] # random example
 

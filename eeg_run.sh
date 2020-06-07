@@ -32,11 +32,13 @@ DIM_HIDDEN=8
 
 # smoothing
 USE_SMOOTHING=1
-WINDOW_SIZE=320 #TODO
+WINDOW_SIZE=80 
+SIGMA_SCALE=16 #TODO
 
 ##MUST CHANGE##
-NAME='swz-adjusting'
-TAG='swz-'$WINDOW_SIZE
+NAME='scale-factor-for-Sigma'
+TAG='scale'$SIGMA_SCALE'-0'
+#TAG=''
 
 TRAIN=0
 TEST=1
@@ -56,5 +58,5 @@ python3 eeg_run.py --tr_path=$TR_PATH --val_path=$VAL_PATH \
     --model=$MODEL --exp_id=$EXP_ID\
     --dim_input=$DIM_INPUT --dim_layer=$DIM_LAYER --dim_z=$DIM_Z \
     --shuffle=$SHUFFLE --m2m=$M2M --rnn_len=$RNN_LEN --dim_hidden $DIM_HIDDEN \
-    --use_smoothing=$USE_SMOOTHING --window_size=$WINDOW_SIZE \
+    --use_smoothing=$USE_SMOOTHING --window_size=$WINDOW_SIZE --sigma_scale=$SIGMA_SCALE\
     --train=$TRAIN --test=$TEST
