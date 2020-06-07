@@ -15,7 +15,7 @@ LR=0.002
 OPTIMIZER='RMSprop'
 MAX_EPOCH=1000
 VALID_EVERY=1
-PATIENCE=3
+PATIENCE=1
 
 MODEL='lstm' # ae or lstm
 
@@ -40,7 +40,7 @@ NAME='scale-factor-for-Sigma'
 TAG='scale'$SIGMA_SCALE'-0'
 #TAG=''
 
-TRAIN=0
+TRAIN=1
 TEST=1
 EXP_ID='SAN-278' # for reloading model for test
 ###############

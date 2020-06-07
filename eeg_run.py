@@ -1,6 +1,7 @@
 import argparse
 import neptune
 from eeg_test import test_main
+from eeg_main import train_main
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--tr_path', type=str, help='', default='')
@@ -49,11 +50,6 @@ if __name__ == '__main__':
     neptune.init(args.init)
     exp = neptune.create_experiment(name=args.name, params=params)
     neptune.append_tag(args.tag) 
-
-    if args.model == 'ae':
-        from ae.ae_main import train_main
-    if args.model == 'lstm':
-        from lstm.lstm_main import train_main
     
     if args.train==1:
         args.exp_id = exp._id
