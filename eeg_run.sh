@@ -17,8 +17,6 @@ MAX_EPOCH=1000
 VALID_EVERY=1
 PATIENCE=1
 
-MODEL='lstm' # ae or lstm
-
 # AE params
 DIM_INPUT=2
 DIM_LAYER=32
@@ -30,19 +28,19 @@ M2M=1
 RNN_LEN=16
 DIM_HIDDEN=8
 
-# smoothing
+# smoothing (Not used current)
 USE_SMOOTHING=1
-WINDOW_SIZE=80 
-SIGMA_SCALE=16 #TODO
+WINDOW_SIZE=10 
+SIGMA_SCALE=2
 
 ##MUST CHANGE##
-NAME='LSTM-redraw-graphics'
-#TAG='scale'$SIGMA_SCALE'-0'
-TAG='tag'
+MODEL='lstm' # ae or lstm
+NAME='remove-legend-lstm'
+EXP_ID='SAN-305' # for reloading model for test
+TAG=$EXP_ID
 
 TRAIN=0
 TEST=1
-EXP_ID='SAN-305' # for reloading model for test
 ###############
 
 #MODEL_OUT_FILE=$OUT_DIR'/optim.'$OPTIMIZER'.'$LR'.pth'
