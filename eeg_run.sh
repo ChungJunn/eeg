@@ -31,7 +31,6 @@ DIM_HIDDEN=8
 # smoothing (Not used current)
 USE_SMOOTHING=1
 WINDOW_SIZE=10 
-SIGMA_SCALE=2
 
 ##MUST CHANGE##
 MODEL='lstm' # ae or lstm
@@ -56,5 +55,4 @@ python3 eeg_run.py --tr_path=$TR_PATH --val_path=$VAL_PATH \
     --model=$MODEL --exp_id=$EXP_ID \
     --dim_input=$DIM_INPUT --dim_layer=$DIM_LAYER --dim_z=$DIM_Z \
     --shuffle=$SHUFFLE --m2m=$M2M --rnn_len=$RNN_LEN --dim_hidden $DIM_HIDDEN \
-    --use_smoothing=$USE_SMOOTHING --window_size=$WINDOW_SIZE --sigma_scale=$SIGMA_SCALE\
-    --train=$TRAIN --test=$TEST
+    --use_smoothing=$USE_SMOOTHING --window_size=$WINDOW_SIZE --train=$TRAIN --test=$TEST

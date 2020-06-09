@@ -10,10 +10,30 @@ import sys
 from eeg_utils import MultivariateGaussianLikelihood
 from eeg_utils import smoothBySlidingWindow as smooth
 
+def forward(x, model, x_avg, x_std, args):
+    '''
+    args: x: 2D array of data (Tx, D), 
+          model: LSTM or AE model
+          x_avg: avgs of each features of data (D,)
+          x_std: sigmas of each featurese (D,)
+    out: data: 2D array of reconstructed data
+    '''
+    x_ = (x - x_avg) / x_std # _ denotes normalized
+
+    if args.model == 'lstm':
+        x_ = x_.view(-1,1, args.dim_input)
+        xp_ = model(x_).view(-1,args.dim_input) # x prime
+    elif args.model == 'ae':
+        xp_ = model(x_)
+    
+    xp = (xp_ * x_std) + x_avg
+
+    return xp
+
 def test_main(args, neptune):
     # some constants
     error_scaler = 1E8
-    ar = (1240, 1460) # anomaly range @200608-03:10
+    ar = [1240, 1460] # anomaly range @200608-03:10
     in_n = args.dim_input
 
     # load model and obtain some stats
@@ -28,37 +48,21 @@ def test_main(args, neptune):
     # 1. load test data
     val_data = np.loadtxt(args.val_path, delimiter=',')
     val_data = torch.tensor(val_data).type(torch.float32)
-    val_inp = (val_data - x_avg) / x_std
-
-    if args.model == 'lstm':
-        val_inp = val_inp.view(-1,1,in_n)
-        val_recon = model(val_inp).view(-1,in_n)
-    elif args.model == 'ae':
-        val_recon = model(val_inp)
-    
-    val_recon = (val_recon * x_std) + x_avg
+    val_recon = forward(val_data, model, x_avg, x_std, args)    
     val_err = torch.sum((val_recon - val_data) ** 2, dim=1, keepdim=True) # squared error
     ve = val_err * error_scaler    
 
     test_data = np.loadtxt(args.test_path, delimiter=',')
-    
-    test_lbl = test_data[:,-1]
-    data_len = test_data.shape[0]
-    
-    test_data = torch.tensor(test_data[:,:-1]).type(torch.float32).detach() # last column is labels
-    test_inp = (test_data - x_avg) / x_std
-
-    if args.model == 'lstm':
-        test_inp = test_inp.view(-1,1,in_n)
-        test_recon = model(test_inp).view(-1,in_n)
-    elif args.model == 'ae':
-        test_recon = model(test_inp)
-    
-    test_recon = (test_recon * x_std) + x_avg
+    test_lbl = test_data[:,-1]; data_len = test_data.shape[0] # retreive labels and length
+    test_data = torch.tensor(test_data[:,:-1]).type(torch.float32) 
+    test_recon = forward(test_data, model, x_avg, x_std, args) 
     test_err = torch.sum((test_recon - test_data) ** 2, dim=1, keepdim=True) # squared error
     te = test_err * error_scaler
-    te_ = te.detach().numpy() # for plotting
-    
+
+    # 2. measure validation error and test error
+    neptune.set_property('validation error', torch.sum(ve).item())
+    neptune.set_property('test error', torch.sum(te).item())
+
     # 2. plot reconstruction results
     cols = ['sensor1', 'sensor2'] # features 
     ids_col = range(test_data.shape[0]) # for index
@@ -68,18 +72,21 @@ def test_main(args, neptune):
         for i, col in enumerate(cols):
             axs[i].plot(ids_col, data.numpy()[:,i], '-c', linewidth=2, label='Raw Data')
             axs[i].plot(ids_col, recon.detach().numpy()[:,i], '-b', linewidth=1, label='Reconstructed Data')
-            
         axs[1].legend() # only add legend for second row
         fig.suptitle('Time Series of ' + str)
         log_chart('Data-Reconstruction', fig) 
     
-    # 3. find threshold
-    T = torch.mean(ve) + torch.std(ve)
-    # let's make new threshold
-    T = torch.min(ve)    
+    #3. find threshold
+    T = (torch.mean(ve) + 2 * torch.std(ve)).item()
+    T_ = np.empty((data_len,1)); T_[:] = T # for plotting threshold
 
-    T_ = np.empty((data_len,1)); T_[:] = T.item() # for plotting threshold
+    if args.use_smoothing==1: 
+        ve = smooth(ve.detach().numpy(), args.window_size)
+        te = smooth(te.detach().numpy(), args.window_size) # smoothing removes first window_size samples. (Tx, 1) -> (Tx-args.window_size+1, 1)
+   
     pred = (te > T) # pred is  classification result
+    pad = np.empty((args.window_size-1,1))
+    pad[:] = 0; pred = np.vstack([pad, pred]) # add 0 padding
 
     from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
     acc = accuracy_score(test_lbl, pred); neptune.set_property('acc',acc)
@@ -90,9 +97,10 @@ def test_main(args, neptune):
     # 4. draw plot
     fig = plt.figure(figsize=(24,4))
     ids = list(range(data_len))
-    plt.plot(ids[:ar[0]], te_[:ar[0]], '-c', label='Test Reconstruction Error (Normal)')
-    plt.plot(ids[ar[0]:ar[1]], te_[ar[0]:ar[1]], '-r', label='Test Reconstruction Error (Anomaly)')
-    plt.plot(ids[ar[1]:], te_[ar[1]:], '-c')
+    pad[:]=np.nan; te = np.vstack([pad, te]) # add nan padding
+    plt.plot(ids[:ar[0]], te[:ar[0]], '-c', label='Test Reconstruction Error (Normal)')
+    plt.plot(ids[ar[0]:ar[1]], te[ar[0]:ar[1]], '-r', label='Test Reconstruction Error (Anomaly)')
+    plt.plot(ids[ar[1]:], te[ar[1]:], '-c')
     plt.plot(ids, T_, '--b', label='Threshold')
     plt.xlabel('Time'); plt.ylabel('Error');plt.legend()
     #plt.ylim((0,2E5))
@@ -100,9 +108,9 @@ def test_main(args, neptune):
     log_chart('Reconstruction Error', fig)
 
 if __name__ == '__main__':
-    neptune.init('cjlee/sandbox')
-    neptune.create_experiment(name='Autoencoder')
-    neptune.append_tag('run2')
+    #neptune.init('cjlee/sandbox')
+    #neptune.create_experiment(name='Autoencoder')
+    #neptune.append_tag('run2')
     
     parser = argparse.ArgumentParser()
     parser.add_argument('--test_path', type=str, help='', default='/home/chl/eeg/data/eeg_test.csv')

@@ -234,3 +234,15 @@ Going toward obtaining working pipeline
  - there is some error in there. You need to fowarding using (Tx, 1, D)
  - 
 
+@ 200609-21:52
+** can we make small reconstruction error in training and large reconstruction error in testing?
+1) The identity function objective : 
+- small validation reconstruction error
+- large test reconstruction error
+
+2) Threshold model objective:
+- high precision, high recall
+- what is the good compromise between them? - how does IFTM paper approach this?
+
+
+

@@ -36,7 +36,6 @@ parser.add_argument('--dim_hidden', type=int, help='')
 # smoothing parameter
 parser.add_argument('--use_smoothing', type=int, help='')
 parser.add_argument('--window_size', type=int, help='')
-parser.add_argument('--sigma_scale', type=float, help='')
 
 parser.add_argument('--train', type=int, help='')
 parser.add_argument('--test', type=int, help='')
