@@ -244,5 +244,12 @@ Going toward obtaining working pipeline
 - high precision, high recall
 - what is the good compromise between them? - how does IFTM paper approach this?
 
+hyper-param experiments (LSTM)
+0) Optimizer - Adam, RMSprop, SGD - run with default learning rate
+1) lr - {0.1, 0.04, 0.02, 0.01, 0.004, 0.002, 0.001, 0.0004, 0.0002, 0.0001}
+3) batchsize - {16, 32, 64, 128}
 
-
+4) shuffle(true) - {True, False}
+5) many-many(true) - {True, False}
+6) Hidden Nodes(8) - {1, 2, 4, 8, 16, 32}
+7) patience(3) - {2,3,5,8}

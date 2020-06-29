@@ -10,12 +10,12 @@ TEST_PATH='./data/eeg_test.csv'
 OUT_DIR='/home/chl/eeg'
 STAT_FILE='/data/eeg.stat'
 
-BATCH_SIZE=64
-LR=0.002
-OPTIMIZER='RMSprop'
+BATCH_SIZE=64 
+LR=0.0004 
+OPTIMIZER='Adam' 
 MAX_EPOCH=1000
 VALID_EVERY=1
-PATIENCE=1
+PATIENCE=3
 
 # AE params
 DIM_INPUT=2
@@ -23,7 +23,7 @@ DIM_LAYER=32
 DIM_Z=1
 
 # LSTM params
-SHUFFLE=1
+SHUFFLE=1 # TODO
 M2M=1
 RNN_LEN=16
 DIM_HIDDEN=8
@@ -32,15 +32,15 @@ DIM_HIDDEN=8
 USE_SMOOTHING=1
 WINDOW_SIZE=10 
 
-##MUST CHANGE##
+##MUST CHANGE###TODO
 MODEL='lstm' # ae or lstm
-NAME='remove-legend-lstm'
-EXP_ID='SAN-305' # for reloading model for test
-TAG=$EXP_ID
+NAME='lstm-data-shuffle'
+TAG='False'
+################TODO
 
-TRAIN=0
+#EXP_ID='SAN-305' # for reloading model for test
+TRAIN=1
 TEST=1
-###############
 
 #MODEL_OUT_FILE=$OUT_DIR'/optim.'$OPTIMIZER'.'$LR'.pth'
 OUT_DIR=$OUT_DIR'/'$MODEL
