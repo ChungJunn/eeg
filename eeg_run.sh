@@ -11,7 +11,7 @@ OUT_DIR='/home/chl/eeg'
 STAT_FILE='/data/eeg.stat'
 
 BATCH_SIZE=64 
-LR=0.0004 
+LR=0.00002 #TODO 
 OPTIMIZER='Adam' 
 MAX_EPOCH=1000
 VALID_EVERY=1
@@ -19,11 +19,11 @@ PATIENCE=3
 
 # AE params
 DIM_INPUT=2
-DIM_LAYER=32
+DIM_LAYER=4
 DIM_Z=1
 
 # LSTM params
-SHUFFLE=1 # TODO
+SHUFFLE=1 
 M2M=1
 RNN_LEN=16
 DIM_HIDDEN=8
@@ -33,9 +33,9 @@ USE_SMOOTHING=1
 WINDOW_SIZE=10 
 
 ##MUST CHANGE###TODO
-MODEL='lstm' # ae or lstm
-NAME='lstm-data-shuffle'
-TAG='False'
+MODEL='ae' # ae or lstm
+NAME='ae-optim-adam'
+TAG='0-00002'
 ################TODO
 
 #EXP_ID='SAN-305' # for reloading model for test
